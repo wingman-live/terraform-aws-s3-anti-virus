@@ -137,11 +137,12 @@ data "aws_s3_bucket" "main_scan" {
 resource "aws_s3_bucket_notification" "main_scan" {
   count  = length(var.av_scan_buckets)
   bucket = element(data.aws_s3_bucket.main_scan.*.id, count.index)
-
+  eventbridge=true
   lambda_function {
     id                  = element(data.aws_s3_bucket.main_scan.*.id, count.index)
     lambda_function_arn = aws_lambda_function.main_scan.arn
     events              = ["s3:ObjectCreated:*"]
+    filter_prefix = "uploads/originals/"
   }
 }
 
@@ -178,7 +179,7 @@ resource "aws_lambda_function" "main_scan" {
   function_name = var.name_scan
   role          = aws_iam_role.main_scan.arn
   handler       = "scan.lambda_handler"
-  runtime       = "python3.9"
+  runtime       = "python3.12"
   memory_size   = var.memory_size
   timeout       = var.timeout_seconds
 
